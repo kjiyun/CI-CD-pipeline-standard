@@ -1,0 +1,51 @@
+name: Java CI Standard
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: "JDK version"
+        required: true
+        default: "17"
+        type: string
+      distribution:
+        description: "JDK distribution"
+        required: false
+        default: "temurin"
+        type: string
+      build-tool:
+        description: "Gradle or Maven"
+        required: false
+        default: "Gradle"
+        type: string
+      gradle-tasks:
+        description: "Gradle tasks to run"
+        required: false
+        default: "clean build"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+
+      - name: Set up Gradle
+        if: ${{ inputs.build-tool == 'Gradle' }}
+        uses: actions/setup-gradle@v4
+
+      - name: Gradle CI
+        if: ${{ inputs.build-tool == 'Gradle' }}
+        run: ./gradlew ${{ inputs.gradle-tasks }}
+
