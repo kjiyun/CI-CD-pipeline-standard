@@ -6,7 +6,6 @@ on:
       java-version:
         description: "JDK version"
         required: true
-        default: "17"
         type: string
       distribution:
         description: "JDK distribution"
@@ -23,6 +22,16 @@ on:
         required: false
         default: "clean build"
         type: string
+      maven-goals:
+        description: "Maven goals to run"
+        required: false
+        default: "test"
+        type: string
+      upload-artifacts:
+        description: "Upload test reports and build outputs"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -33,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -43,9 +52,19 @@ jobs:
 
       - name: Set up Gradle
         if: ${{ inputs.build-tool == 'Gradle' }}
-        uses: actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Gradle CI
         if: ${{ inputs.build-tool == 'Gradle' }}
         run: ./gradlew ${{ inputs.gradle-tasks }}
 
+      - name: Maven cache
+        if: ${{ inputs.build-tool == 'Maven' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Maven CI
+        if: ${{ inputs.build-tool == 'Maven' }}
+        run: mvn -B ${{ inputs.maven-goals }}
