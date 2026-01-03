@@ -7,11 +7,13 @@ on:
         description: "JDK version"
         required: true
         type: string
+
       distribution:
         description: "JDK distribution"
         required: false
         default: "temurin"
         type: string
+
       build-command:
         description: 'Custom build command. Use "false" to run default build.'
         required: false
@@ -22,11 +24,23 @@ on:
         required: false
         default: "false"
         type: string
+
       upload-artifacts:
         description: "Upload test reports and build outputs"
         required: false
         default: true
         type: boolean
+
+      write-application-yml:
+        description: "Whether to write src/main/resources/application.yml from secret"
+        required: false
+        default: false
+        type: boolean
+
+      secrets:
+        APPLICATION:
+          description: "application.yml content"
+          required: false
 
 permissions:
   contents: read
@@ -35,7 +49,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      java: ${{ steps.
+      java: ${{ steps.filter.outputs.java }}
     steps:
       - uses: actions/checkout@v4
 
@@ -72,16 +86,19 @@ jobs:
         with:
           java-version: ${{ inputs.java-version }}
           distribution: ${{ inputs.distribution }}
+          cache: gradle
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: make application.yml
-        run: |
-          cd ./src/main/resources
-          touch ./application.yml
-          echo "${{ secrets.APPLICATION }}" > ./application.yml
         shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./src/main/resources
+          cat > ./src/main/resources/application.yml << 'EOF'
+          ${{ secrets.APPLICATION }}
+          EOF
 
       - name: Gradle Build
         shell: bash
@@ -91,9 +108,9 @@ jobs:
           if [[ -n "${BUILD_COMMAND}" && "${BUILD_COMMAND}" != "false" ]]; then
             echo "Using Custom build command"
             eval "${BUILD_COMMAND}"
-          else:
+          else
             echo "Using Default build command"
-            ./gradlew clean build
+            ./gradlew --no-daemon assemble
           fi
 
       - name: Gradle Test
@@ -104,6 +121,9 @@ jobs:
           if [[ -n "${TEST_COMMAND}" && "${TEST_COMMAND}" != "false" ]]; then
             echo "Using custom TEST_COMMAND"
             eval "${TEST_COMMAND}"
+          else
+            echo "Using Default test command"
+            ./gradlew --no-daemon test
           fi
 
       - name: Upload test reports (always)
