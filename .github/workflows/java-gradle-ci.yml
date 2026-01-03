@@ -42,7 +42,6 @@ on:
       APPLICATION:
         description: "application.yml content"
         required: false
-        type: string
 
 permissions:
   contents: read
