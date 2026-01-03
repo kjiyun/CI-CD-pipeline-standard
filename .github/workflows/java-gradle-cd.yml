@@ -17,6 +17,7 @@ on:
       image-name:
         description: "Docker image name"
         required: true
+        type: string
 
     secrets:
       DOCKER_USERNAME:
