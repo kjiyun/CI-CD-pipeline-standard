@@ -42,6 +42,7 @@ on:
       APPLICATION:
         description: "application.yml content"
         required: false
+        type: string
 
 permissions:
   contents: read
@@ -93,7 +94,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: make application.yml
-        if: ${{ inputs['write-application-yml'] && secrets.APPLICATION != '' }}
+        if: ${{ input.write-application-yml }}
         shell: bash
         run: |
           set -euo pipefail
