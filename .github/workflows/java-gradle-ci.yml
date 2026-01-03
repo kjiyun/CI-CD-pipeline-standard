@@ -93,7 +93,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: make application.yml
-        if: ${{ inputs.write-application-yml && secrets.APPLICATION != '' }}
+        if: ${{ inputs['write-application-yml'] && secrets.APPLICATION != '' }}
         shell: bash
         run: |
           set -euo pipefail
