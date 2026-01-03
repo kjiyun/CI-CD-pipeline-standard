@@ -19,6 +19,7 @@ on:
         required: false
         default: "false"
         type: string
+
       test-command:
         description: 'Custom test command. Use "false" to run default test.'
         required: false
@@ -37,10 +38,10 @@ on:
         default: false
         type: boolean
 
-      secrets:
-        APPLICATION:
-          description: "application.yml content"
-          required: false
+    secrets:
+      APPLICATION:
+        description: "application.yml content"
+        required: false
 
 permissions:
   contents: read
