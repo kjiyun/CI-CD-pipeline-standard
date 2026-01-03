@@ -1,0 +1,83 @@
+name: Java CD Standard
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: "JDK version"
+        required: true
+        type: string
+
+      distribution:
+        description: "JDK distribution"
+        required: false
+        default: "temurin"
+        type: string
+
+      image-name:
+        description: "Docker image name"
+        required: true
+
+    secrets:
+      DOCKER_USERNAME:
+        description: "Docker username"
+        required: true
+      DOCKER_PASSWORD:
+        description: "Docker password"
+        required: true
+      DOCKER_REPO:
+        description: "Docker repo"
+        required: false
+      HOST_ID:
+        description: "Host ID"
+        required: false
+      USERNAME:
+        description: "username"
+        required: false
+      PRIVATE_KEY:
+        description: "private key"
+        required: false
+
+jobs:
+  containerize:
+    name: Containerize (DockerHub)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
+            -u "${{ secrets.DOCKER_USERNAME }}" \
+            --password-stdin
+
+      - name: Build & Push
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${{ secrets.DOCKER_REPO }}/${{ inputs.image-name }}"
+          
+          docker build -t "${IMAGE}" .
+          docker push "${IMAGE}"
+
+  deploy:
+    name: Deploy
+    needs: containerize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_ID }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            set -e
+            
+            IMAGE="${{ secrets.DOCKER_REPO }}/${{ inputs.image-name }}"
+            sudo docker-compose down
+            sudo docker pull "${IMAGE}"
+            sudo docker-compose up -d
+            sudo docker image prune -f

@@ -59,7 +59,7 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            ${{ inputs.change-filters != '' && inputs.change-filters || '
+            ${{ '
             java:
               - "apps/**"
               - "src/**"
@@ -93,6 +93,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: make application.yml
+        if: ${{ inputs.write-application-yml && secrets.APPLICATION != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -127,7 +128,7 @@ jobs:
             ./gradlew --no-daemon test
           fi
 
-      - name: Upload test reports (always)
+      - name: Upload test reports
         if: ${{ inputs.upload-artifacts }}
         uses: actions/upload-artifact@v4
         with:
