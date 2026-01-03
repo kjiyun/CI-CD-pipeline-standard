@@ -1,0 +1,117 @@
+name: Java CI Standard
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: "JDK version"
+        required: true
+        type: string
+      distribution:
+        description: "JDK distribution"
+        required: false
+        default: "temurin"
+        type: string
+      build-command:
+        description: 'Custom build command. Use "false" to run default build.'
+        required: false
+        default: "false"
+        type: string
+      test-command:
+        description: 'Custom test command. Use "false" to run default test.'
+        required: false
+        default: "false"
+        type: string
+      upload-artifacts:
+        description: "Upload test reports and build outputs"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      java: ${{ steps.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes (use default filters if input empty)
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            ${{ inputs.change-filters != '' && inputs.change-filters || '
+            java:
+              - "apps/**"
+              - "src/**"
+              - "build.gradle*"
+              - "settings.gradle*"
+              - "gradle/**"
+            ' }}
+
+  build-test:
+    name: Build & Test
+    needs: changes
+    if: needs.changes.outputs.java == 'true'
+    runs-on: ubuntu-latest
+
+    env:
+      BUILD_COMMAND: ${{ inputs.build-command }}
+      TEST_COMMAND: ${{ inputs.test-command }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: make application.yml
+        run: |
+          cd ./src/main/resources
+          touch ./application.yml
+          echo "${{ secrets.APPLICATION }}" > ./application.yml
+        shell: bash
+
+      - name: Gradle Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          if [[ -n "${BUILD_COMMAND}" && "${BUILD_COMMAND}" != "false" ]]; then
+            echo "Using Custom build command"
+            eval "${BUILD_COMMAND}"
+          else:
+            echo "Using Default build command"
+            ./gradlew clean build
+          fi
+
+      - name: Gradle Test
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          if [[ -n "${TEST_COMMAND}" && "${TEST_COMMAND}" != "false" ]]; then
+            echo "Using custom TEST_COMMAND"
+            eval "${TEST_COMMAND}"
+          fi
+
+      - name: Upload test reports (always)
+        if: ${{ inputs.upload-artifacts }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/**
+            **/build/test-results/**
+          if-no-files-found: ignore
