@@ -92,6 +92,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Gradle 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # application.yml 반영
       - name: make application.yml
         if: ${{ inputs.write-application-yml }}
         shell: bash
