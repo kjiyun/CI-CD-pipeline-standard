@@ -66,6 +66,7 @@ jobs:
               - "build.gradle*"
               - "settings.gradle*"
               - "gradle/**"
+              - ".github/workflows/**"
             ' }}
 
   build-test:
