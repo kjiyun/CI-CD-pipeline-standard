@@ -19,6 +19,12 @@ on:
         required: true
         type: string
 
+      write-application-yml:
+        description: "Whether to write src/main/resources/application.yml from secret"
+        required: false
+        default: false
+        type: boolean
+
     secrets:
       DOCKER_USERNAME:
         description: "Docker username"
