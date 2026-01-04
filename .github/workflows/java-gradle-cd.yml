@@ -70,8 +70,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          IMAGE="${{ secrets.DOCKER_REPO }}/${{ inputs.image-name }}"
           
+          DOCKER_REPO="${{ secrets.DOCKER_REPO }}"
+          DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+          
+          if [[ -x "$DOCKER_REPO" ]]; then
+            if [[ -x "$DOCKER_USERNAME" ]]; then
+              echo "Both DOCKER_REPO and DOCKER_USERNAME are empty. Cannot form image name."
+              exit 1
+            fi
+            DOCKER_REPO="$DOCKER_USERNAME"
+          fi
+          
+          IMAGE="${DOCKER_REPO}/${{ inputs.image-name }}"
           docker build -t "${IMAGE}" .
           docker push "${IMAGE}"
 
