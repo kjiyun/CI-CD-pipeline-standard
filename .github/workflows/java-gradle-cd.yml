@@ -55,6 +55,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: make application.yml
+        if: ${{ inputs.write-application-yml }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./src/main/resources
+          cat > ./src/main/resources/application.yml << 'EOF'
+          ${{ secrets.APPLICATION }}
+          EOF
+
       - name: Build jar
         run: ./gradlew clean bootJar
 
