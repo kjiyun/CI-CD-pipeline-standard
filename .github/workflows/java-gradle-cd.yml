@@ -74,8 +74,10 @@ jobs:
           DOCKER_REPO="${{ secrets.DOCKER_REPO }}"
           DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
           
-          if [[ -x "$DOCKER_REPO" ]]; then
-            if [[ -x "$DOCKER_USERNAME" ]]; then
+          echo "DOCKER_REPO="
+          echo "${DOCKER_REPO}"
+          if [[ -z "$DOCKER_REPO" ]]; then
+            if [[ -z "$DOCKER_USERNAME" ]]; then
               echo "Both DOCKER_REPO and DOCKER_USERNAME are empty. Cannot form image name."
               exit 1
             fi
@@ -83,8 +85,8 @@ jobs:
           fi
           
           IMAGE="${DOCKER_REPO}/${{ inputs.image-name }}"
-          docker build -t "${IMAGE}" .
-          docker push "${IMAGE}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
 
   deploy:
     name: Deploy
