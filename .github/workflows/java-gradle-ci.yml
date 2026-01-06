@@ -1,5 +1,6 @@
 name: Java CI Standard
-
+# TODO: gradle cache 단계 추가하기
+# TODO: cd 단계에서 containerize 빼고 ci build&test로 옮길지 고민 필요
 on:
   workflow_call:
     inputs:
@@ -102,11 +103,9 @@ jobs:
         if: ${{ inputs.write-application-yml }}
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p ./src/main/resources
-          cat > ./src/main/resources/application.yml << 'EOF'
-          ${{ secrets.APPLICATION }}
-          EOF
+          cd ./src/main/resources
+          touch ./application.yml
+          echo "${{ secrets.APPLICATION }}" > ./application.yml
 
       - name: Gradle Build
         shell: bash
