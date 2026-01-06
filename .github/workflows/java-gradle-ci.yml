@@ -91,6 +91,9 @@ jobs:
           distribution: ${{ inputs.distribution }}
           cache: gradle
 
+      - name: Clear Gradle caches (temporary)
+        run: rm -rf ~/.gradle/caches
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -142,3 +145,11 @@ jobs:
             **/build/reports/tests/**
             **/build/test-results/**
           if-no-files-found: ignore
+
+      - name: Network sanity check
+        run: |
+          set -e
+          echo "=== curl repo.maven.apache.org ==="
+          curl -I -L https://repo.maven.apache.org/maven2/ | sed -n '1,20p'
+          echo "=== curl plugins.gradle.org ==="
+          curl -I -L https://plugins.gradle.org/m2/ | sed -n '1,20p'
