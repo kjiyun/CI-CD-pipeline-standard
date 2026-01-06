@@ -26,6 +26,9 @@ on:
         type: boolean
 
     secrets:
+      APPLICATION:
+        description: "application.yml content"
+        required: false
       DOCKER_USERNAME:
         description: "Docker username"
         required: true
@@ -65,11 +68,9 @@ jobs:
         if: ${{ inputs.write-application-yml }}
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p ./src/main/resources
-          cat > ./src/main/resources/application.yml << 'EOF'
-          ${{ secrets.APPLICATION }}
-          EOF
+          cd ./src/main/resources
+          touch ./application.yml
+          echo "${{ secrets.APPLICATION }}" > ./application.yml
 
       - name: Build jar
         run: ./gradlew clean bootJar
